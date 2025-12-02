@@ -1,0 +1,42 @@
+{
+  "name": "sonarissues",
+  "version": "1.0.0",
+  "description": "MCP server for automatically resolving Sonar issues",
+  "type": "module",
+  "bin": {
+    "sonarissues": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "dev": "tsc --watch",
+    "prepare": "pnpm run build"
+  },
+  "keywords": ["mcp", "sonar", "sonarqube", "code-quality"],
+  "author": {
+    "name": "name-q",
+    "email": "1620206666@qq.com",
+    "url": "https://github.com/name-q/sonarIssue"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/name-q/sonarIssue.git"
+  },
+  "bugs": {
+    "url": "https://github.com/name-q/sonarIssue/issues"
+  },
+  "homepage": "https://github.com/name-q/sonarIssue#readme",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.3",
+    "axios": "^1.7.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@8.15.0+sha512.ea45517d5285d123eac02c3793505fa1fd6da90a2fc60d1e8d9e0c1e9292886ecfaff513f062b9d1cc8021bb8615033b1ac5bea3b2ee3fc165a6d7034bbe6b03"
+}
