@@ -83,8 +83,9 @@ const suggestFixTool: Tool<typeof suggestFixSchema> = {
   schema: suggestFixSchema,
   description: "根据 Sonar 问题类型，生成自动修复建议和代码补丁。",
   handler: async ({ issueKey, sonarUrl, token }) => {
+    issueResolver.setSonarConfig(sonarUrl, token);
     const issue = await sonarClient.getIssueDetails(sonarUrl, issueKey, token);
-    const suggestion = issueResolver.generateFixSuggestion(issue);
+    const suggestion = await issueResolver.generateFixSuggestion(issue);
 
     return {
       content: [
@@ -106,6 +107,8 @@ const batchAnalyzeTool: Tool<typeof batchAnalyzeSchema> = {
     const projectKey = sonarClient.extractProjectKey(url);
     const baseUrl = sonarClient.extractBaseUrl(url);
 
+    issueResolver.setSonarConfig(baseUrl, token);
+
     const issues = await sonarClient.getProjectIssues(
       baseUrl,
       projectKey,
@@ -113,7 +116,7 @@ const batchAnalyzeTool: Tool<typeof batchAnalyzeSchema> = {
       severity
     );
 
-    const analysis = issueResolver.batchAnalyze(issues);
+    const analysis = await issueResolver.batchAnalyze(issues);
 
     return {
       content: [

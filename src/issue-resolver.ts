@@ -1,12 +1,31 @@
 import { SonarIssue, FixSuggestion, BatchAnalysis } from "./types/index.js";
+import { SonarClient } from "./sonar-client.js";
 
 export class IssueResolver {
+  private sonarClient: SonarClient;
+  private baseUrl: string = "";
+  private token?: string;
+
+  constructor(baseUrl?: string, token?: string) {
+    this.sonarClient = new SonarClient();
+    this.baseUrl = baseUrl || "";
+    this.token = token;
+  }
+
+  /**
+   * 设置 Sonar 服务器信息
+   */
+  setSonarConfig(baseUrl: string, token?: string) {
+    this.baseUrl = baseUrl;
+    this.token = token;
+  }
+
   /**
    * 生成修复建议
    */
-  generateFixSuggestion(issue: SonarIssue): FixSuggestion {
+  async generateFixSuggestion(issue: SonarIssue): Promise<FixSuggestion> {
     const priority = this.calculatePriority(issue);
-    const suggestion = this.getSuggestionByRule(issue);
+    const suggestion = await this.getSuggestionByRule(issue);
 
     return {
       issueKey: issue.key,
@@ -22,7 +41,7 @@ export class IssueResolver {
   /**
    * 批量分析问题
    */
-  batchAnalyze(issues: SonarIssue[]): BatchAnalysis {
+  async batchAnalyze(issues: SonarIssue[]): Promise<BatchAnalysis> {
     const bySeverity: Record<string, number> = {};
     const byType: Record<string, number> = {};
 
@@ -31,8 +50,10 @@ export class IssueResolver {
       byType[issue.type] = (byType[issue.type] || 0) + 1;
     });
 
-    const prioritizedIssues = issues
-      .map((issue) => this.generateFixSuggestion(issue))
+    const prioritizedIssuesPromises = issues.map((issue) =>
+      this.generateFixSuggestion(issue)
+    );
+    const prioritizedIssues = (await Promise.all(prioritizedIssuesPromises))
       .sort((a, b) => b.priority - a.priority)
       .slice(0, 20); // 返回前 20 个优先级最高的问题
 
@@ -75,43 +96,47 @@ export class IssueResolver {
   /**
    * 根据规则生成修复建议
    */
-  private getSuggestionByRule(issue: SonarIssue): string {
-    const rule = issue.rule.toLowerCase();
-
-    // 常见的 Sonar 规则修复建议
-    if (rule.includes("null")) {
-      return "添加空值检查，使用 Optional 或者在使用前验证对象不为 null。";
+  private async getSuggestionByRule(issue: SonarIssue): Promise<string> {
+    if (!this.baseUrl) {
+      return `请查看 Sonar 规则 ${issue.rule} 的详细说明，并根据最佳实践进行修复。`;
     }
 
-    if (rule.includes("unused")) {
-      return "删除未使用的变量、方法或导入语句，保持代码整洁。";
-    }
+    try {
+      const ruleDetails = await this.sonarClient.getRuleDetails(
+        this.baseUrl,
+        issue.rule,
+        this.token
+      );
+      if (ruleDetails && ruleDetails.htmlDesc) {
+        // 从 HTML 描述中提取修复建议
+        const suggestion = this.extractSuggestionFromHtml(ruleDetails.htmlDesc);
+        return suggestion;
+      }
 
-    if (rule.includes("complexity")) {
-      return "降低方法的圈复杂度，考虑将复杂逻辑拆分为多个小方法。";
+      return `请查看 Sonar 规则 ${issue.rule} 的详细说明，并根据最佳实践进行修复。`;
+    } catch (error) {
+      console.error(
+        `[WARN] Failed to fetch rule details for ${issue.rule}:`,
+        error instanceof Error ? error.message : error
+      );
+      return `请查看 Sonar 规则 ${issue.rule} 的详细说明，并根据最佳实践进行修复。`;
     }
+  }
 
-    if (rule.includes("duplicate")) {
-      return "消除重复代码，提取公共逻辑到独立的方法或类中。";
-    }
+  /**
+   * 从 HTML 描述中提取修复建议
+   */
+  private extractSuggestionFromHtml(htmlDesc: string): string {
+    let text = htmlDesc
+      .replace(/<[^>]*>/g, "") // 去 HTML 标签
+      .replace(/[\n\r\t]/g, "") // 去换行符/回车/制表
+      .trim(); // 去首尾空白
 
-    if (rule.includes("security") || rule.includes("sql")) {
-      return "修复安全漏洞，使用参数化查询、输入验证或安全的 API。";
-    }
+      // TODO 这里包含了错误&正确案例 以及 解释 内容太多了是否过于增加token消耗
+      // TODO 根据问题类型缓存
+      // TODO 只展示正确案例？或开头200字？
 
-    if (rule.includes("exception")) {
-      return "改进异常处理，避免捕获通用异常，提供具体的错误处理逻辑。";
-    }
-
-    if (rule.includes("resource")) {
-      return "确保资源正确关闭，使用 try-with-resources 或 finally 块。";
-    }
-
-    if (rule.includes("naming")) {
-      return "遵循命名规范，使用有意义的变量名、方法名和类名。";
-    }
-
-    return `请查看 Sonar 规则 ${issue.rule} 的详细说明，并根据最佳实践进行修复。`;
+    return text;
   }
 
   /**
