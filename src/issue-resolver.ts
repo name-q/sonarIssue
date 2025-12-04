@@ -1,23 +1,4 @@
-import { SonarIssue } from "./sonar-client.js";
-
-export interface FixSuggestion {
-  issueKey: string;
-  severity: string;
-  type: string;
-  message: string;
-  suggestion: string;
-  codeExample?: string;
-  priority: number;
-  estimatedEffort?: string;
-}
-
-export interface BatchAnalysis {
-  totalIssues: number;
-  bySeverity: Record<string, number>;
-  byType: Record<string, number>;
-  prioritizedIssues: FixSuggestion[];
-  summary: string;
-}
+import { SonarIssue, FixSuggestion, BatchAnalysis } from "./types/index.js";
 
 export class IssueResolver {
   /**

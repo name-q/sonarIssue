@@ -1,19 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-
-export interface SonarIssue {
-  key: string;
-  rule: string;
-  severity: string;
-  component: string;
-  project: string;
-  line?: number;
-  message: string;
-  type: string;
-  status: string;
-  effort?: string;
-  debt?: string;
-  tags: string[];
-}
+import { SonarIssue } from "./types/index.js";
 
 export class SonarClient {
   private axiosInstance: AxiosInstance;
