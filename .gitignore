@@ -143,3 +143,6 @@ vite.config.ts.timestamp-*
 .vscode/
 *.swp
 *.swo
+
+#调试包中有敏感token 不应该在用户修改后发布到git
+debug.ts
