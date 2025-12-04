@@ -1,60 +1,121 @@
 import { tools } from "./src/server/tools.js";
 
 /**
- * 调试脚本：逐个验证每个 tool
- * 使用方法：
- * 1. 修改下面的 testCases 中的参数
- * 2. 运行: npx tsx debug.ts
+ * 调试tool脚本
  */
 
-const testCases = {
-  analyze_sonar_project: {
-    url: "https://sonar.devops.com.cn/dashboard?id=managerweb",
-    token: "",
-  },
-  get_issue_details: {
-    issueKey: "managerweb:src/App.tsx:1",//<---这个是analyze_sonar_project返回的component和line的值
-    sonarUrl: "https://sonar.devops.com.cn",
-    token: "",
-  },
-  suggest_fix: {
-    issueKey: "managerweb:src/App.tsx:1",
-    sonarUrl: "https://sonar.devops.com.cn",
-    token: "",
-  },
-  batch_analyze_issues: {
-    url: "https://sonar.devops.com.cn/dashboard?id=managerweb",
-    token: "",
-    severity: "BLOCKER",
-  },
+const baseConfig = {
+  sonarUrl: "https://sonar.devops.com.cn",
+  projectUrl: "https://sonar.devops.com.cn/dashboard?id=managerweb",
+  token: "xxxxxxxxxxxxxxxxxxx",
 };
+
+let cachedIssueKey: string | null = null;
+
+async function getIssueKeyFromAnalyze(): Promise<string | null> {
+  if (cachedIssueKey) {
+    return cachedIssueKey;
+  }
+
+  const analyzeTool = tools.find((t) => t.name === "analyze_sonar_project");
+  if (!analyzeTool) {
+    console.error("[ERROR] analyze_sonar_project tool not found");
+    return null;
+  }
+
+  try {
+    console.log("[INFO] Fetching issues from analyze_sonar_project...");
+    const result = await analyzeTool.handler({
+      url: baseConfig.projectUrl,
+      token: baseConfig.token,
+    } as any);
+
+    const output = JSON.parse(result.content[0].text);
+    const firstIssue = output.issues?.[0];
+
+    if (firstIssue?.key) {
+      cachedIssueKey = firstIssue.key;
+      console.log(`[INFO] Got issueKey: ${cachedIssueKey}`);
+      return cachedIssueKey;
+    } else {
+      console.error("[ERROR] No issues found in analyze_sonar_project result");
+      return null;
+    }
+  } catch (error) {
+    console.error(
+      `[ERROR] Failed to get issueKey: ${error instanceof Error ? error.message : error}`
+    );
+    return null;
+  }
+}
 
 async function debugTool(toolName: string) {
   const tool = tools.find((t) => t.name === toolName);
   if (!tool) {
-    console.error(`Tool not found: ${toolName}`);
+    console.error(`[ERROR] Tool not found: ${toolName}`);
     return;
   }
 
-  const testCase = testCases[toolName as keyof typeof testCases];
+  let testCase: any;
+
+  // 构建测试参数
+  if (toolName === "analyze_sonar_project") {
+    testCase = {
+      url: baseConfig.projectUrl,
+      token: baseConfig.token,
+    };
+  } else if (toolName === "get_issue_details") {
+    const issueKey = await getIssueKeyFromAnalyze();
+    if (!issueKey) {
+      console.error(
+        "[ERROR] Cannot test get_issue_details: no issues available for debugging"
+      );
+      return;
+    }
+    testCase = {
+      issueKey,
+      sonarUrl: baseConfig.sonarUrl,
+      token: baseConfig.token,
+    };
+  } else if (toolName === "suggest_fix") {
+    const issueKey = await getIssueKeyFromAnalyze();
+    if (!issueKey) {
+      console.error(
+        "[ERROR] Cannot test suggest_fix: no issues available for debugging"
+      );
+      return;
+    }
+    testCase = {
+      issueKey,
+      sonarUrl: baseConfig.sonarUrl,
+      token: baseConfig.token,
+    };
+  } else if (toolName === "batch_analyze_issues") {
+    testCase = {
+      url: baseConfig.projectUrl,
+      token: baseConfig.token,
+      severity: "BLOCKER",
+    };
+  }
+
   if (!testCase) {
-    console.error(`Test case not found for: ${toolName}`);
+    console.error(`[ERROR] Test case not found for: ${toolName}`);
     return;
   }
 
-  console.log(`\n${"=".repeat(60)}`);
-  console.log(`Testing: ${toolName}`);
-  console.log(`${"=".repeat(60)}`);
+  console.log(`\n${"-".repeat(60)}`);
+  console.log(`[TEST] ${toolName}`);
+  console.log(`${"-".repeat(60)}`);
   console.log(`Description: ${tool.description}`);
   console.log(`Input:`, JSON.stringify(testCase, null, 2));
 
   try {
-    console.log(`Running...`);
+    console.log(`[RUNNING] Executing...`);
     const result = await tool.handler(testCase as any);
-    console.log(`Success!`);
+    console.log(`[SUCCESS] Completed!`);
     console.log(`Output:`, result.content[0].text);
   } catch (error) {
-    console.error(`Error:`, error instanceof Error ? error.message : error);
+    console.error(`[ERROR] ${error instanceof Error ? error.message : error}`);
   }
 }
 
@@ -62,7 +123,7 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.log("Sonar Issues Tool Debugger");
+    console.log("[INFO] Sonar Issues Tool Debugger");
     console.log("\nAvailable tools:");
     tools.forEach((tool) => {
       console.log(`  - ${tool.name}`);
