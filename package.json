@@ -11,7 +11,12 @@
     "dev": "tsc --watch",
     "prepare": "pnpm run build"
   },
-  "keywords": ["mcp", "sonar", "sonarqube", "code-quality"],
+  "keywords": [
+    "mcp",
+    "sonar",
+    "sonarqube",
+    "code-quality"
+  ],
   "author": {
     "name": "name-q",
     "email": "1620206666@qq.com",
