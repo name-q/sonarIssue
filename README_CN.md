@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://github.com/name-q/sonarIssue/blob/main/logo.png" width="180" />
+</p>
+
 [Click here for English version →](./README.md)
 
 # Sonar Issues MCP 服务端
