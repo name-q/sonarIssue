@@ -1,11 +1,13 @@
 {
   "mcpServers": {
-    "sonarissues-local": {
+    "sonarissues": {
       "command": "node",
       "args": ["/Users/apple/Documents/other/sonarIssue/dist/index.js"],
-      "env": {},
-      "disabled": false,
-      "autoApprove": []
+      "env": {
+        "NODE_ENV": "production",
+        "SONAR_TOKEN": ""
+      },
+      "disabled": false
     }
   }
 }

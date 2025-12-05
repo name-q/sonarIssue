@@ -11,11 +11,20 @@ import {
 const sonarClient = new SonarClient();
 const issueResolver = new IssueResolver();
 
+// 从环境变量读取配置
+const SONAR_TOKEN = process.env.SONAR_TOKEN;
+
+if (!SONAR_TOKEN) {
+  console.warn("[WARN] SONAR_TOKEN environment variable not set");
+}
+
 type Tool<T extends z.ZodSchema> = {
   name: string;
   schema: T;
   description: string;
-  handler: (params: z.infer<T>) => Promise<{ content: Array<{ type: "text"; text: string }> }>;
+  handler: (
+    params: z.infer<T>
+  ) => Promise<{ content: Array<{ type: "text"; text: string }> }>;
 };
 
 const analyzeProjectTool: Tool<typeof analyzeProjectSchema> = {
@@ -26,11 +35,12 @@ const analyzeProjectTool: Tool<typeof analyzeProjectSchema> = {
   handler: async ({ url, token }) => {
     const projectKey = sonarClient.extractProjectKey(url);
     const baseUrl = sonarClient.extractBaseUrl(url);
+    const finalToken = token || SONAR_TOKEN;
 
     const issues = await sonarClient.getProjectIssues(
       baseUrl,
       projectKey,
-      token
+      finalToken
     );
 
     return {
@@ -65,7 +75,13 @@ const getIssueDetailsTool: Tool<typeof getIssueDetailsSchema> = {
   description:
     "获取特定 Sonar 问题的详细信息，包括代码位置、问题描述和建议的修复方案。",
   handler: async ({ issueKey, sonarUrl, token }) => {
-    const issue = await sonarClient.getIssueDetails(sonarUrl, issueKey, token);
+    const finalToken = token || SONAR_TOKEN;
+
+    const issue = await sonarClient.getIssueDetails(
+      sonarUrl,
+      issueKey,
+      finalToken
+    );
 
     return {
       content: [
@@ -83,8 +99,14 @@ const suggestFixTool: Tool<typeof suggestFixSchema> = {
   schema: suggestFixSchema,
   description: "根据 Sonar 问题类型，生成自动修复建议和代码补丁。",
   handler: async ({ issueKey, sonarUrl, token }) => {
-    issueResolver.setSonarConfig(sonarUrl, token);
-    const issue = await sonarClient.getIssueDetails(sonarUrl, issueKey, token);
+    const finalToken = token || SONAR_TOKEN;
+    
+    issueResolver.setSonarConfig(sonarUrl, finalToken);
+    const issue = await sonarClient.getIssueDetails(
+      sonarUrl,
+      issueKey,
+      finalToken
+    );
     const suggestion = await issueResolver.generateFixSuggestion(issue);
 
     return {
@@ -106,13 +128,14 @@ const batchAnalyzeTool: Tool<typeof batchAnalyzeSchema> = {
   handler: async ({ url, token, severity }) => {
     const projectKey = sonarClient.extractProjectKey(url);
     const baseUrl = sonarClient.extractBaseUrl(url);
+    const finalToken = token || SONAR_TOKEN;
 
-    issueResolver.setSonarConfig(baseUrl, token);
+    issueResolver.setSonarConfig(baseUrl, finalToken);
 
     const issues = await sonarClient.getProjectIssues(
       baseUrl,
       projectKey,
-      token,
+      finalToken,
       severity
     );
 
