@@ -15,7 +15,7 @@
 Just run it. No installation, no dependencies, no nonsense:
 
 ```bash
-SONAR_TOKEN=your_token npx sonarissues@latest
+SONAR_TOKEN=your_token npx sonar-issues-mcp@latest
 ```
 
 If it crashes, it's probably your token’s fault.
@@ -35,9 +35,9 @@ Add the following:
 ```json
 {
   "mcpServers": {
-    "sonarissues": {
+    "sonar-issues-mcp": {
       "command": "npx",
-      "args": ["sonarissues@latest"],
+      "args": ["sonar-issues-mcp@latest"],
       "env": {
         "SONAR_TOKEN": "your_sonar_token_here"
       }

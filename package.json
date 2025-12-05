@@ -1,12 +1,12 @@
 {
-  "name": "sonarissues",
+  "name": "sonar-issues-mcp",
   "version": "1.0.0",
   "description": "MCP server for automatically resolving Sonar issues",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "sonarissues": "./dist/index.js"
+    "sonar-issues-mcp": "./dist/index.js"
   },
   "files": [
     "dist",

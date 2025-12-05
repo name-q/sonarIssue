@@ -15,7 +15,7 @@
 不用安装，不用依赖，不用折腾：
 
 ```bash
-SONAR_TOKEN=your_token npx sonarissues@latest
+SONAR_TOKEN=your_token npx sonar-issues-mcp@latest
 ```
 
 如果报错，大概率是你的 Token 不争气。
@@ -35,9 +35,9 @@ SONAR_TOKEN=your_token npx sonarissues@latest
 ```json
 {
   "mcpServers": {
-    "sonarissues": {
+    "sonar-issues-mcp": {
       "command": "npx",
-      "args": ["sonarissues@latest"],
+      "args": ["sonar-issues-mcp@latest"],
       "env": {
         "SONAR_TOKEN": "your_sonar_token_here"
       }
