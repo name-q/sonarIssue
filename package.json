@@ -3,21 +3,32 @@
   "version": "1.0.0",
   "description": "MCP server for automatically resolving Sonar issues",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "sonarissues": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "README_CN.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
     "dev": "tsc --watch",
     "debug": "tsx debug.ts",
     "debug:all": "tsx debug.ts all",
-    "prepare": "pnpm run build"
+    "prepare": "pnpm run build",
+    "prepublishOnly": "pnpm run build"
   },
   "keywords": [
     "mcp",
     "sonar",
     "sonarqube",
-    "code-quality"
+    "code-quality",
+    "issue-resolver",
+    "code-analysis"
   ],
   "author": {
     "name": "name-q",

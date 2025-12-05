@@ -1,0 +1,13 @@
+src/
+.kiro/
+.vscode/
+.git/
+.gitignore
+debug.ts
+tsconfig.json
+package-lock.json
+pnpm-lock.yaml
+.DS_Store
+node_modules/
+dist/*.map
+logo.png
