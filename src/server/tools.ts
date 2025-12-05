@@ -14,10 +14,6 @@ const issueResolver = new IssueResolver();
 // 从环境变量读取配置
 const SONAR_TOKEN = process.env.SONAR_TOKEN;
 
-if (!SONAR_TOKEN) {
-  console.warn("[WARN] SONAR_TOKEN environment variable not set");
-}
-
 type Tool<T extends z.ZodSchema> = {
   name: string;
   schema: T;
