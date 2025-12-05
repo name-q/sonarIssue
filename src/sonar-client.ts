@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { SonarIssue } from "./types/index.js";
+import { handleSonarError } from "./utils/error-handler.js";
 
 export class SonarClient {
   private axiosInstance: AxiosInstance;
@@ -72,12 +73,7 @@ export class SonarClient {
 
       return response.data.issues || [];
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Sonar API 请求失败: ${error.response?.status} - ${error.response?.statusText}`
-        );
-      }
-      throw error;
+      throw handleSonarError(error, baseUrl);
     }
   }
 
@@ -114,12 +110,7 @@ export class SonarClient {
 
       return issues[0];
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Sonar API 请求失败: ${error.response?.status} - ${error.response?.statusText}`
-        );
-      }
-      throw error;
+      throw handleSonarError(error, baseUrl);
     }
   }
 
@@ -151,12 +142,7 @@ export class SonarClient {
 
       return response.data.rule;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `获取规则详情失败: ${error.response?.status} - ${error.response?.statusText}`
-        );
-      }
-      throw error;
+      throw handleSonarError(error, baseUrl);
     }
   }
 }
